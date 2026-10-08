@@ -1,0 +1,250 @@
+{
+  "dataset": "SisFall",
+  "stage": "B4",
+  "status": "READY_FOR_SISFALL_STAGE_B5",
+  "model_selected_by_validation_rule": "Random Forest",
+  "selection_rule": {
+    "primary": "fall_f1",
+    "secondary": "roc_auc",
+    "description": "Validation-set Fall F1 score with validation ROC-AUC tie-breaker"
+  },
+  "random_seed": 42,
+  "system_info": {
+    "python_version": "3.13.9",
+    "scikit_learn_version": "1.7.2",
+    "pandas_version": "2.3.3",
+    "numpy_version": "2.3.5",
+    "joblib_version": "1.5.2",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "feature_order": [
+    "AccX_mean",
+    "AccX_std",
+    "AccX_min",
+    "AccX_max",
+    "AccX_ptp",
+    "AccX_rms",
+    "AccY_mean",
+    "AccY_std",
+    "AccY_min",
+    "AccY_max",
+    "AccY_ptp",
+    "AccY_rms",
+    "AccZ_mean",
+    "AccZ_std",
+    "AccZ_min",
+    "AccZ_max",
+    "AccZ_ptp",
+    "AccZ_rms",
+    "GyrX_mean",
+    "GyrX_std",
+    "GyrX_min",
+    "GyrX_max",
+    "GyrX_ptp",
+    "GyrX_rms",
+    "GyrY_mean",
+    "GyrY_std",
+    "GyrY_min",
+    "GyrY_max",
+    "GyrY_ptp",
+    "GyrY_rms",
+    "GyrZ_mean",
+    "GyrZ_std",
+    "GyrZ_min",
+    "GyrZ_max",
+    "GyrZ_ptp",
+    "GyrZ_rms",
+    "AccMag_mean",
+    "AccMag_std",
+    "AccMag_min",
+    "AccMag_max",
+    "AccMag_ptp",
+    "AccMag_rms",
+    "GyrMag_mean",
+    "GyrMag_std",
+    "GyrMag_min",
+    "GyrMag_max",
+    "GyrMag_ptp",
+    "GyrMag_rms"
+  ],
+  "feature_count": 48,
+  "split_summary": {
+    "train_subjects": [
+      "SA02",
+      "SA03",
+      "SA06",
+      "SA07",
+      "SA10",
+      "SA11",
+      "SA12",
+      "SA13",
+      "SA14",
+      "SA15",
+      "SA16",
+      "SA17",
+      "SA18",
+      "SA20",
+      "SA22",
+      "SA23",
+      "SE03",
+      "SE04",
+      "SE05",
+      "SE06",
+      "SE07",
+      "SE08",
+      "SE09",
+      "SE10",
+      "SE13",
+      "SE14",
+      "SE15"
+    ],
+    "validation_subjects": [
+      "SA05",
+      "SA08",
+      "SA09",
+      "SA19",
+      "SE01",
+      "SE12"
+    ],
+    "test_subjects": [
+      "SA01",
+      "SA04",
+      "SA21",
+      "SE02",
+      "SE11"
+    ],
+    "train_rows": 221471,
+    "validation_rows": 51839,
+    "test_rows": 39339
+  },
+  "models": {
+    "Logistic Regression": {
+      "artifact_file": "sisfall_logistic_regression.joblib",
+      "pipeline_steps": [
+        "scaler",
+        "classifier"
+      ],
+      "training_time_seconds": 3.52,
+      "validation_metrics": {
+        "accuracy": 0.7683,
+        "fall_f1": 0.6645,
+        "fall_precision": 0.6571,
+        "fall_recall": 0.672,
+        "adl_f1": 0.8231,
+        "adl_precision": 0.828,
+        "adl_recall": 0.8182,
+        "f1_macro": 0.7438,
+        "roc_auc": 0.8128,
+        "confusion_matrix": {
+          "tn": 27936,
+          "fp": 6206,
+          "fn": 5805,
+          "tp": 11892
+        },
+        "training_time_seconds": 3.52
+      },
+      "test_metrics": {
+        "accuracy": 0.7876,
+        "fall_f1": 0.6676,
+        "fall_precision": 0.7073,
+        "fall_recall": 0.6321,
+        "adl_f1": 0.8439,
+        "adl_precision": 0.8222,
+        "adl_recall": 0.8668,
+        "f1_macro": 0.7557,
+        "roc_auc": 0.8084,
+        "confusion_matrix": {
+          "tn": 22591,
+          "fp": 3473,
+          "fn": 4884,
+          "tp": 8391
+        }
+      }
+    },
+    "Random Forest": {
+      "artifact_file": "sisfall_random_forest.joblib",
+      "pipeline_steps": [
+        "classifier"
+      ],
+      "training_time_seconds": 35.56,
+      "validation_metrics": {
+        "accuracy": 0.7995,
+        "fall_f1": 0.6911,
+        "fall_precision": 0.729,
+        "fall_recall": 0.6569,
+        "adl_f1": 0.8516,
+        "adl_precision": 0.8308,
+        "adl_recall": 0.8734,
+        "f1_macro": 0.7713,
+        "roc_auc": 0.843,
+        "confusion_matrix": {
+          "tn": 29820,
+          "fp": 4322,
+          "fn": 6071,
+          "tp": 11626
+        },
+        "training_time_seconds": 35.56
+      },
+      "test_metrics": {
+        "accuracy": 0.8116,
+        "fall_f1": 0.6931,
+        "fall_precision": 0.7695,
+        "fall_recall": 0.6304,
+        "adl_f1": 0.864,
+        "adl_precision": 0.8276,
+        "adl_recall": 0.9038,
+        "f1_macro": 0.7786,
+        "roc_auc": 0.846,
+        "confusion_matrix": {
+          "tn": 23557,
+          "fp": 2507,
+          "fn": 4906,
+          "tp": 8369
+        }
+      }
+    },
+    "Support Vector Machine": {
+      "artifact_file": "sisfall_svm.joblib",
+      "pipeline_steps": [
+        "scaler",
+        "classifier"
+      ],
+      "training_time_seconds": 547.93,
+      "validation_metrics": {
+        "accuracy": 0.4545,
+        "fall_f1": 0.5072,
+        "fall_precision": 0.3667,
+        "fall_recall": 0.8224,
+        "adl_f1": 0.3891,
+        "adl_precision": 0.7413,
+        "adl_recall": 0.2638,
+        "f1_macro": 0.4482,
+        "roc_auc": 0.6937,
+        "confusion_matrix": {
+          "tn": 9007,
+          "fp": 25135,
+          "fn": 3143,
+          "tp": 14554
+        },
+        "training_time_seconds": 547.93
+      },
+      "test_metrics": {
+        "accuracy": 0.4328,
+        "fall_f1": 0.4976,
+        "fall_precision": 0.3549,
+        "fall_recall": 0.8323,
+        "adl_f1": 0.3488,
+        "adl_precision": 0.7286,
+        "adl_recall": 0.2293,
+        "f1_macro": 0.4232,
+        "roc_auc": 0.6898,
+        "confusion_matrix": {
+          "tn": 5977,
+          "fp": 20087,
+          "fn": 2226,
+          "tp": 11049
+        }
+      }
+    }
+  }
+}

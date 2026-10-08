@@ -1,0 +1,124 @@
+# ================================
+# Python
+# ================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# ================================
+# Secrets / Environment
+# ================================
+.env
+.env.*
+!.env.example
+
+# ================================
+# Logs / Runtime files
+# ================================
+*.log
+logs/
+*.tmp
+*.temp
+
+# ================================
+# SQLite / Runtime databases
+# ================================
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# ================================
+# Datasets
+# ================================
+data/
+datasets/
+SisFall_dataset/
+kfall/
+
+# ================================
+# Generated reports / runtime output
+# ================================
+reports/
+artifacts/
+outputs/
+results/
+generated/
+
+# ================================
+# IDE / Editor
+# ================================
+.vscode/
+.idea/
+*.code-workspace
+
+# ================================
+# OS files
+# ================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ================================
+# Node
+# ================================
+node_modules/
+
+# ================================
+# Build output
+# ================================
+dist/
+build/
+
+# ================================
+# Jupyter
+# ================================
+.ipynb_checkpoints/
+
+# ================================
+# Python tooling
+# ================================
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ================================
+# Temporary files
+# ================================
+*.bak
+*.backup
+*.old
+
+# ================================
+# Fall Detection generated data
+# ================================
+fall_detection_dataset/fall_events.db
+fall_detection_dataset/fall_events.db-*
+fall_detection_dataset/live_validation/
+fall_detection_dataset/processed/
+fall_detection_dataset/windows/
+fall_detection_dataset/raw/
+fall_detection_dataset/data/
+fall_detection_dataset/__pycache__/
+
+# Generated dataset reports/results
+fall_detection_dataset/reports/
+
+# Dataset/model training artifacts
+fall_detection_dataset/models/
+fall_detection_dataset/metadata/
+
+# Generated dataset scripts/cache
+fall_detection_dataset/scripts/**/__pycache__/
+
+# Scratch / experiments
+scratch/

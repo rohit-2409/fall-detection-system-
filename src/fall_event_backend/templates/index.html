@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fall Detection Incident Command Center</title>
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <!-- Core Application Stylesheet -->
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+
+  <!-- Top System Header Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="system-icon-wrapper" aria-hidden="true">
+        <div class="pulse-indicator" id="systemPulse"></div>
+      </div>
+      <div>
+        <h1 class="system-title">Wearable Fall Detection System</h1>
+        <p class="system-subtitle">Incident Command Center &amp; Live Telemetry</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="system-status-indicator-box" id="systemStatusBox" aria-live="polite">
+        <span class="system-status-dot dot-ready" id="systemStatusDot">●</span>
+        <span class="system-status-title" id="systemStatusText">SYSTEM READY</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Subsystem Status Header Bar (Section 3: Live System Health) -->
+  <section class="subsystem-status-bar" id="subsystemStatusBar" aria-label="Subsystem Health Telemetry">
+    <div class="subsystem-bar-container">
+      <div class="subsystem-pill" id="pillEsp32" title="ESP32 IMU Sensor Node">
+        <span class="pill-dot dot-online" id="dotEsp32">●</span>
+        <span class="pill-label">ESP32</span>
+        <span class="pill-value" id="valEsp32">Connected</span>
+      </div>
+      <div class="subsystem-pill" id="pillMqtt" title="Mosquitto MQTT Message Broker">
+        <span class="pill-dot dot-online" id="dotMqtt">●</span>
+        <span class="pill-label">MQTT</span>
+        <span class="pill-value" id="valMqtt">Connected</span>
+      </div>
+      <div class="subsystem-pill" id="pillGateway" title="Stage 6G MQTT Gateway Service">
+        <span class="pill-dot dot-online" id="dotGateway">●</span>
+        <span class="pill-label">Gateway</span>
+        <span class="pill-value" id="valGateway">Ready</span>
+      </div>
+      <div class="subsystem-pill" id="pillBackend" title="Flask REST API Microservice">
+        <span class="pill-dot dot-online" id="dotBackend">●</span>
+        <span class="pill-label">Backend</span>
+        <span class="pill-value" id="valBackend">Ready</span>
+      </div>
+      <div class="subsystem-pill" id="pillDatabase" title="SQLite Persistent Event Store">
+        <span class="pill-dot dot-online" id="dotDatabase">●</span>
+        <span class="pill-label">Database</span>
+        <span class="pill-value" id="valDatabase">Ready</span>
+      </div>
+      <div class="subsystem-pill" id="pillGps" title="NEO-6M Satellite Navigation">
+        <span class="pill-dot dot-online" id="dotGps">●</span>
+        <span class="pill-label">GPS</span>
+        <span class="pill-value" id="valGps">Available</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Global Connection Alert Banner (Section 11: Connection Loss Handling) -->
+  <div id="serviceAlertBanner" class="service-alert-banner hidden" role="alert" aria-live="assertive">
+    <span class="alert-icon-text">[ALERT]</span>
+    <span id="serviceAlertMessage">BACKEND CONNECTION LOST</span>
+    <button class="btn btn-sm btn-outline-light" id="btnRetryConnection">Retry</button>
+  </div>
+
+  <main class="main-container">
+
+    <!-- Normal Monitoring Hero State (Section 4: When no active incident exists) -->
+    <section id="noActiveIncidentSection" class="no-incident-panel" role="region" aria-label="Normal Monitoring State">
+      <div class="no-incident-content">
+        <div class="no-incident-header">
+          <span class="no-incident-dot">●</span>
+          <span class="no-incident-badge">MONITORING ACTIVE</span>
+        </div>
+        <h2 class="no-incident-title">NO ACTIVE INCIDENT</h2>
+        <p class="no-incident-subtitle">System is monitoring normally. Wearable sensor telemetry streaming at 100 Hz.</p>
+      </div>
+    </section>
+
+    <!-- Active Fall Incident Panel (Section 4, 5, 6: Hero Alert Banner) -->
+    <section id="activeAlertSection" class="alert-panel hidden" role="alert" aria-live="polite">
+      <div class="alert-panel-header">
+        <div class="alert-title-wrap">
+          <span class="alert-badge-pulse" id="alertSeverityBadge">EMERGENCY</span>
+          <h2 class="alert-heading" id="alertHeading">ACTIVE FALL INCIDENT</h2>
+        </div>
+        <div class="alert-timer-wrap">
+          <span class="badge badge-CONFIRMED" id="alertStatusBadge">CONFIRMED</span>
+          <span class="timer-label">Response Window:</span>
+          <span class="timer-value" id="alertCountdownText">60s remaining</span>
+        </div>
+      </div>
+
+      <div class="countdown-progress-track">
+        <div class="countdown-progress-bar" id="countdownProgressBar"></div>
+      </div>
+
+      <p class="alert-statement" id="alertStatement">
+        The wearable sensor algorithm detected movement dynamics consistent with a fall impact. Please verify user status.
+      </p>
+
+      <div class="alert-meta-grid">
+        <div class="meta-item">
+          <span class="meta-label">Incident ID</span>
+          <span class="meta-val" id="alertEventId">--</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Detection Time</span>
+          <span class="meta-val" id="alertDetectedTime">--</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Confidence</span>
+          <span class="meta-val" id="alertConfidence">--</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Sensor Source</span>
+          <span class="meta-val" id="alertSource">--</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Session ID</span>
+          <span class="meta-val" id="alertSessionId">--</span>
+        </div>
+      </div>
+
+      <!-- Location Telemetry Card (Section 4 & 7) -->
+      <div class="location-section" id="alertLocationSection">
+        <div class="location-section-header">
+          <span class="location-heading">Location Telemetry</span>
+          <span class="badge badge-gps-unavailable" id="alertGpsStatusBadge">GPS LOCATION UNAVAILABLE</span>
+        </div>
+        <div class="alert-meta-grid location-grid">
+          <div class="meta-item">
+            <span class="meta-label">Latitude</span>
+            <span class="meta-val" id="alertLatitude">Not available</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Longitude</span>
+            <span class="meta-val" id="alertLongitude">Not available</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Satellites</span>
+            <span class="meta-val" id="alertSatellites">0</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">HDOP</span>
+            <span class="meta-val" id="alertHdop">Not available</span>
+          </div>
+        </div>
+        <div class="map-action-wrap" id="alertMapActionWrap">
+          <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-map-action hidden" id="alertMapLink">
+            Open in Google Maps
+          </a>
+        </div>
+      </div>
+
+      <!-- Incident Control Action Buttons (Section 5 & 6) -->
+      <div class="alert-actions">
+        <button class="btn btn-acknowledge" id="btnAcknowledge" aria-label="Acknowledge fall incident">
+          ACKNOWLEDGE INCIDENT
+        </button>
+        <button class="btn btn-resolve hidden" id="btnResolve" aria-label="Resolve fall incident">
+          RESOLVE INCIDENT
+        </button>
+        <button class="btn btn-cancel" id="btnOpenCancelDialog" aria-label="Cancel fall alert">
+          Cancel Alert
+        </button>
+      </div>
+
+      <!-- Inline Cancellation Confirmation Form -->
+      <div id="cancelReasonPanel" class="cancel-reason-panel hidden">
+        <label for="cancelReasonInput" class="form-label">Cancellation Reason / Notes:</label>
+        <div class="cancel-input-row">
+          <input type="text" id="cancelReasonInput" class="form-control" value="User verified safe / false alarm" maxlength="120">
+          <button class="btn btn-danger-action" id="btnConfirmCancel">Confirm Cancel</button>
+          <button class="btn btn-secondary" id="btnDismissCancel">Back</button>
+        </div>
+      </div>
+
+      <div id="alertActionFeedback" class="action-feedback hidden"></div>
+    </section>
+
+    <!-- Command Center Main Work Area -->
+    <div class="dashboard-grid">
+
+      <!-- Column 1: Active Event Telemetry & Sensor Details -->
+      <section class="card current-status-card">
+        <div class="card-header">
+          <h2 class="card-title">Active Event Telemetry</h2>
+          <span class="badge" id="telemetryStatusBadge">IDLE</span>
+        </div>
+        <div class="card-body">
+          <div id="noActiveEventPlaceholder" class="empty-state-placeholder">
+            <div class="empty-state-symbol">[ - ]</div>
+            <h3 class="empty-title">No Active Fall Event</h3>
+            <p class="empty-desc">System is monitoring sensor telemetry at 100 Hz. Background verification active.</p>
+          </div>
+
+          <div id="activeEventDetailsView" class="active-details-view hidden">
+            <dl class="property-list">
+              <div class="prop-row">
+                <dt>Incident ID:</dt>
+                <dd id="viewEventId">--</dd>
+              </div>
+              <div class="prop-row">
+                <dt>Current Status:</dt>
+                <dd><span class="badge" id="viewStatusBadge">--</span></dd>
+              </div>
+              <div class="prop-row">
+                <dt>Detected Timestamp:</dt>
+                <dd id="viewDetectedTime">--</dd>
+              </div>
+              <div class="prop-row">
+                <dt>Physical Occurred:</dt>
+                <dd id="viewOccurredTime">--</dd>
+              </div>
+              <div class="prop-row">
+                <dt>Algorithm Confidence:</dt>
+                <dd id="viewConfidence">--</dd>
+              </div>
+              <div class="prop-row">
+                <dt>Sensor Origin:</dt>
+                <dd id="viewSource">--</dd>
+              </div>
+              <div class="prop-row">
+                <dt>Response Window:</dt>
+                <dd id="viewCountdownStatus">Active</dd>
+              </div>
+              <div class="prop-row prop-divider">
+                <dt>Location Status:</dt>
+                <dd><span class="badge badge-gps-unavailable" id="viewGpsStatusBadge">LOCATION UNAVAILABLE</span></dd>
+              </div>
+              <div class="prop-row">
+                <dt>Latitude:</dt>
+                <dd id="viewLatitude">Not available</dd>
+              </div>
+              <div class="prop-row">
+                <dt>Longitude:</dt>
+                <dd id="viewLongitude">Not available</dd>
+              </div>
+              <div class="prop-row">
+                <dt>Satellites / HDOP:</dt>
+                <dd id="viewSatellitesHdop">0 / Not available</dd>
+              </div>
+              <div class="prop-row hidden" id="viewMapRow">
+                <dt>Map Navigation:</dt>
+                <dd><a href="#" target="_blank" rel="noopener noreferrer" class="map-link-inline" id="viewMapLink">Open in Google Maps</a></dd>
+              </div>
+            </dl>
+
+            <div class="panel-action-row" id="panelActionRow">
+              <button class="btn btn-sm btn-primary" id="btnPanelAck">ACKNOWLEDGE INCIDENT</button>
+              <button class="btn btn-sm btn-resolve hidden" id="btnPanelResolve">RESOLVE INCIDENT</button>
+              <button class="btn btn-sm btn-secondary" id="btnPanelCancel">Cancel</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <small class="disclaimer-text">Diagnostic Monitor: Standalone verification only. No automated emergency services dispatch.</small>
+        </div>
+      </section>
+
+      <!-- Column 2: GPS / Leaflet Map Visualization (Section 7: GPS Map) -->
+      <section class="card map-card" id="mapCard">
+        <div class="card-header">
+          <h2 class="card-title">GPS Incident Geolocation</h2>
+          <span class="badge badge-gps-unavailable" id="mapStatusBadge">GPS: UNAVAILABLE</span>
+        </div>
+        <div class="card-body no-padding map-card-body">
+          <div class="map-container-wrap">
+            <div id="incidentMap" class="leaflet-map-element" role="region" aria-label="Incident Location Map" tabindex="0">
+              <div id="mapFallbackContainer" class="map-fallback-view">
+                <p id="mapFallbackText">Awaiting GPS telemetry data...</p>
+              </div>
+            </div>
+            <!-- GPS Unavailable Overlay -->
+            <div id="mapUnavailableOverlay" class="map-overlay-banner hidden">
+              <div class="overlay-badge">GPS LOCATION UNAVAILABLE</div>
+              <p class="overlay-msg">No satellite coordinates recorded for this event.</p>
+            </div>
+            <!-- Last Known Location Badge -->
+            <div id="mapLastKnownBadge" class="map-last-known-badge hidden">
+              LAST KNOWN LOCATION
+            </div>
+          </div>
+        </div>
+        <div class="card-footer map-footer-bar">
+          <div class="map-coord-summary">
+            <span class="coord-label">Coordinates: </span>
+            <span class="coord-val" id="mapCoordSummary">--</span>
+          </div>
+          <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-map-action hidden" id="mapExternalLink">
+            Open in Google Maps
+          </a>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Full-Width Incident History Audit Table (Section 8: Incident History) -->
+    <section class="card history-card" id="incidentHistorySection">
+      <div class="card-header">
+        <h2 class="card-title">Incident History &amp; Audit Log</h2>
+        <div class="history-controls">
+          <button class="btn btn-sm btn-outline" id="btnRefreshHistory" title="Refresh event list">Refresh</button>
+        </div>
+      </div>
+      <div class="card-body no-padding">
+        <div id="historyLoading" class="loading-state hidden">
+          <div class="spinner"></div>
+          <span>Loading fall events...</span>
+        </div>
+
+        <div id="historyEmpty" class="empty-state-placeholder hidden">
+          <h3 class="empty-title">No Fall Events Recorded</h3>
+          <p class="empty-desc">The database currently contains zero fall records.</p>
+        </div>
+
+        <div id="historyError" class="empty-state-placeholder error-state hidden">
+          <h3 class="empty-title">Error Loading Events</h3>
+          <p class="empty-desc" id="historyErrorMessage">Unable to reach event backend.</p>
+        </div>
+
+        <div class="table-responsive" id="historyTableContainer">
+          <table class="data-table" id="historyTable" aria-label="Fall Event Audit Table">
+            <thead>
+              <tr>
+                <th scope="col">Time</th>
+                <th scope="col">Incident ID</th>
+                <th scope="col">Confidence</th>
+                <th scope="col">Status</th>
+                <th scope="col">GPS</th>
+                <th scope="col">Source</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-footer pagination-footer">
+        <button class="btn btn-sm btn-outline" id="btnPrevPage" disabled>Previous</button>
+        <span class="pagination-info" id="paginationInfo">Page 1</span>
+        <button class="btn btn-sm btn-outline" id="btnNextPage" disabled>Next</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Detailed Event Modal (Section 9: Incident Detail View) -->
+  <div id="eventDetailModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">Incident Diagnostic Details</h3>
+        <button class="modal-close-btn" id="btnCloseModal" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body" id="modalContent">
+        <!-- Rendered dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btnModalClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Application Controller -->
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

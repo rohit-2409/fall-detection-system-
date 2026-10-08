@@ -1,0 +1,21 @@
+# Standalone Wearable Fall Detection System
+# Core Runtime & Validation Dependencies
+# Python Compatibility: >= 3.10, <= 3.13
+
+# Web Server & REST API
+flask>=3.0.0
+
+# Mathematical & Numerical Signal Processing
+numpy>=1.24.0
+scipy>=1.10.0
+
+# Tabular Data & Parquet Processing
+pandas>=2.0.0
+pyarrow>=12.0.0
+
+# Machine Learning Inference & Model Loading
+scikit-learn>=1.3.0
+joblib>=1.3.0
+
+# Hardware Serial Communication (ESP32 UART)
+pyserial>=3.5
